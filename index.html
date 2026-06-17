@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Patient Record System</title>
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --background-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            height: 100vh;
+        }
+
+        /* Layout Columns */
+        .sidebar {
+            flex: 1;
+            max-width: 320px;
+            background: var(--surface-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-top: 5px solid var(--primary-color);
+        }
+
+        .main-content {
+            flex: 2;
+            background: var(--surface-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            padding: 25px;
+            overflow-y: auto;
+            border-top: 5px solid var(--secondary-color);
+        }
+
+        h2, h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* Forms Elements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-color);
+        }
+
+        /* Dosage Grid Styling */
+        .dosage-container {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .meal-timing {
+            margin-bottom: 10px;
+        }
+
+        .meal-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .dosage-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .dosage-box {
+            text-align: center;
+        }
+
+        .dosage-box span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .dosage-box input {
+            text-align: center;
+            padding: 5px;
+        }
+
+        /* Buttons */
+        button {
+            cursor: pointer;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background-color: #172554;
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* Lists and Search */
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .patient-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .patient-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .patient-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        .patient-item.active {
+            background-color: #e0f2fe;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        /* Visit History Timeline */
+        .visit-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .visit-date {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .edit-visit-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        /* Datalist helper text */
+        .hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR: PATIENT DIRECTORY -->
+    <div class="sidebar">
+        <h2>Patient Directory</h2>
+        <input type="text" id="searchPatient" class="search-box" placeholder="🔍 Search patient by name..." onkeyup="filterPatients()">
+        <ul class="patient-list" id="patientList">
+            <!-- Populated via Javascript -->
+        </ul>
+        <button class="btn-secondary" style="margin-top: 10px;" onclick="resetFormForNewPatient()">+ New Patient / Visit</button>
+    </div>
+
+    <!-- MAIN CONTENT: CASE FILE & INPUT -->
+    <div class="main-content">
+        <h2 id="formHeader">New Clinical Entry</h2>
+        
+        <form id="clinicalForm" onsubmit="savePatientRecord(event)">
+            <input type="hidden" id="editVisitIndex" value="">
+
+            <div class="form-row">
+                <!-- Patient Name with Dropdown Autocomplete via Datalist -->
+                <div class="form-group">
+                    <label for="patientName">Patient Name *</label>
+                    <input type="text" id="patientName" list="pastPatients" required onchange="handleNameSelection(this.value)">
+                    <datalist id="pastPatients"></datalist>
+                    <div class="hint">Type to search or auto-fill existing patient</div>
+                </div>
+                
+                <div class="form-group" style="max-width: 120px;">
+                    <label for="patientAge">Age</label>
+                    <input type="number" id="patientAge" min="0" max="150">
+                </div>
+
+                <div class="form-group" style="max-width: 200px;">
+                    <label for="visitDate">Date</label>
+                    <input type="date" id="visitDate" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="patientHistory">Clinical History / Complaints</label>
+                <textarea id="patientHistory" rows="3" placeholder="Symptoms, duration, chronic conditions..."></textarea>
+            </div>
+
+            <!-- Tests Section -->
+            <div class="form-group">
+                <label for="prescribedTests">Prescribed Investigations / Tests</label>
+                <input type="text" id="prescribedTests" list="pastTests" placeholder="e.g., CBC, Serum Creatinine, X-Ray Chest">
+                <datalist id="pastTests"></datalist>
+                <div class="hint">Type to select from previously used tests</div>
+            </div>
+
+            <!-- Medication Section -->
+            <div class="section-title">Medication & Dosage Matrix</div>
+            <div class="form-group">
+                <label for="medicationName">Medication Name</label>
+                <input type="text" id="medicationName" list="pastMeds" placeholder="e.g., Amoxicillin 500mg, Metformin 800mg">
+                <datalist id="pastMeds"></datalist>
+                
+                <!-- Advanced Dose Scheduler requested -->
+                <div class="dosage-container">
+                    <!-- Before Meal Option -->
+                    <div class="meal-timing">
+                        <div class="meal-title">Before Meal (Ante Cibum)</div>
+                        <div class="dosage-grid">
+                            <div class="dosage-box"><span>Morning</span><input type="number" id="bm_morning" min="0" step="0.5" placeholder="0"></div>
+                            <div class="dosage-box"><span>Noon</span><input type="number" id="bm_noon" min="0" step="0.5" placeholder="0"></div>
+                            <div class="dosage-box"><span>Dinner</span><input type="number" id="bm_dinner" min="0" step="0.5" placeholder="0"></div>
+                        </div>
+                    </div>
+                    <!-- After Meal Option -->
+                    <div class="meal-timing">
+                        <div class="meal-title">After Meal (Post Cibum)</div>
+                        <div class="dosage-grid">
+                            <div class="dosage-box"><span>Morning</span><input type="number" id="am_morning" min="0" step="0.5" placeholder="0"></div>
+                            <div class="dosage-box"><span>Noon</span><input type="number" id="am_noon" min="0" step="0.5" placeholder="0"></div>
+                            <div class="dosage-box"><span>Dinner</span><input type="number" id="am_dinner" min="0" step="0.5" placeholder="0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary" id="saveBtn">💾 Save Medical Record</button>
+        </form>
+
+        <!-- Dynamic History Summary of the Selected Patient -->
+        <div id="historySection" style="margin-top: 30px; display: none;">
+            <div class="section-title">Patient Medical History Timeline</div>
+            <div id="visitTimeline"></div>
+        </div>
+    </div>
+
+    <script>
+        // Database Structure stored in LocalStorage
+        let appData = {
+            patients: {},      // Key: Patient Name (Case-Insensitive lookup), Value: { age: x, visits: [...] }
+            globalTests: [],   // Array tracking unique tests for dropdown
+            globalMeds: []     // Array tracking unique medications for dropdown
+        };
+
+        // Initialize App on load
+        window.onload = function() {
+            if (localStorage.getItem('clinicalAppData')) {
+                appData = JSON.parse(localStorage.getItem('clinicalAppData'));
+            }
+            // Set today's default date
+            document.getElementById('visitDate').valueAsDate = new Date();
+            refreshDirectories();
+        };
+
+        function saveToStorage() {
+            localStorage.setItem('clinicalAppData', JSON.stringify(appData));
+            refreshDirectories();
+        }
+
+        // Refresh Lists, Datalists and Autocompletes
+        function refreshDirectories() {
+            const listContainer = document.getElementById('patientList');
+            const patientDatalist = document.getElementById('pastPatients');
+            const testDatalist = document.getElementById('pastTests');
+            const medDatalist = document.getElementById('pastMeds');
+
+            // Clear previous items
+            listContainer.innerHTML = '';
+            patientDatalist.innerHTML = '';
+            testDatalist.innerHTML = '';
+            medDatalist.innerHTML = '';
+
+            // Populate Patient Lists
+            Object.keys(appData.patients).sort().forEach(name => {
+                const li = document.createElement('li');
+                li.className = 'patient-item';
+                li.innerText = name;
+                li.onclick = () => selectPatient(name);
+                listContainer.appendChild(li);
+
+                const option = document.createElement('option');
+                option.value = name;
+                patientDatalist.appendChild(option);
+            });
+
+            // Populate unique global tests dropdown
+            appData.globalTests.forEach(test => {
+                const option = document.createElement('option');
+                option.value = test;
+                testDatalist.appendChild(option);
+            });
+
+            // Populate unique global medications dropdown
+            appData.globalMeds.forEach(med => {
+                const option = document.createElement('option');
+                option.value = med;
+                medDatalist.appendChild(option);
+            });
+        }
+
+        // When a user types/selects an existing patient in the input field
+        function handleNameSelection(name) {
+            if (!name) return;
+            // Match case insensitively if exact string matches list
+            const matchedName = Object.keys(appData.patients).find(k => k.toLowerCase() === name.trim().toLowerCase());
+            if (matchedName) {
+                selectPatient(matchedName);
+            }
+        }
+
+        // Select a patient and show historical timeline
+        function selectPatient(name) {
+            const patient = appData.patients[name];
+            document.getElementById('patientName').value = name;
+            document.getElementById('patientAge').value = patient.age || '';
+            
+            // Highlight item in directory sidebar
+            const items = document.querySelectorAll('.patient-item');
+            items.forEach(item => {
+                item.classList.toggle('active', item.innerText === name);
+            });
+
+            renderTimeline(name);
+        }
+
+        // Render historical timeline cards
+        function renderTimeline(name) {
+            const patient = appData.patients[name];
+            const timeline = document.getElementById('visitTimeline');
+            const historySection = document.getElementById('historySection');
+            
+            timeline.innerHTML = '';
+            
+            if (patient && patient.visits.length > 0) {
+                historySection.style.display = 'block';
+                
+                // Sort visits by date descending
+                const sortedVisits = [...patient.visits].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+                sortedVisits.forEach((visit, index) => {
+                    // Original index map tracking for editing accuracy
+                    const originalIndex = patient.visits.indexOf(visit);
+
+                    const card = document.createElement('div');
+                    card.className = 'visit-card';
+                    
+                    let medDetails = visit.medication.name ? `<strong>Medication:</strong> ${visit.medication.name}<br>` : '';
+                    if (visit.medication.name) {
+                        medDetails += `<span style="font-size:0.85rem; color:var(--text-muted);">
+                            Before Meal [M:${visit.medication.bm.morning}, N:${visit.medication.bm.noon}, D:${visit.medication.bm.dinner}] | 
+                            After Meal [M:${visit.medication.am.morning}, N:${visit.medication.am.noon}, D:${visit.medication.am.dinner}]
+                        </span>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="visit-date">📅 Visit Date: ${visit.date}</div>
+                        <button type="button" class="btn-secondary edit-visit-btn" onclick="editVisit('${name}', ${originalIndex})">📝 Edit</button>
+                        <p style="margin-bottom:8px;"><strong>History:</strong> ${visit.history || 'N/A'}</p>
+                        <p style="margin-bottom:8px;"><strong>Tests:</strong> ${visit.tests || 'None Specified'}</p>
+                        <div>${medDetails}</div>
+                    `;
+                    timeline.appendChild(card);
+                });
+            } else {
+                historySection.style.display = 'none';
+            }
+        }
+
+        // Trigger edit state for a specific historical entry
+        function editVisit(name, index) {
+            const visit = appData.patients[name].visits[index];
+            
+            document.getElementById('formHeader').innerText = `Editing Visit Details for ${name}`;
+            document.getElementById('patientName').value = name;
+            document.getElementById('patientAge').value = appData.patients[name].age;
+            document.getElementById('visitDate').value = visit.date;
+            document.getElementById('patientHistory').value = visit.history;
+            document.getElementById('prescribedTests').value = visit.tests;
+            
+            // Populate Med details back into grid
+            document.getElementById('medicationName').value = visit.medication.name || '';
+            document.getElementById('bm_morning').value = visit.medication.bm?.morning || '';
+            document.getElementById('bm_noon').value = visit.medication.bm?.noon || '';
+            document.getElementById('bm_dinner').value = visit.medication.bm?.dinner || '';
+            document.getElementById('am_morning').value = visit.medication.am?.morning || '';
+            document.getElementById('am_noon').value = visit.medication.am?.noon || '';
+            document.getElementById('am_dinner').value = visit.medication.am?.dinner || '';
+
+            // Set hidden reference tracker values
+            document.getElementById('editVisitIndex').value = index;
+            document.getElementById('saveBtn').innerText = "🔄 Update Medical Record";
+            document.getElementById('patientName').focus();
+        }
+
+        // Save entry handler (Handles both new inserts and structural updates)
+        function savePatientRecord(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('patientName').value.trim();
+            const age = document.getElementById('patientAge').value;
+            const date = document.getElementById('visitDate').value;
+            const history = document.getElementById('patientHistory').value;
+            const tests = document.getElementById('prescribedTests').value.trim();
+            const medName = document.getElementById('medicationName').value.trim();
+            
+            const editIndexVal = document.getElementById('editVisitIndex').value;
+
+            // Gather prescription block
+            const visitMedication = {
+                name: medName,
+                bm: {
+                    morning: document.getElementById('bm_morning').value || 0,
+                    noon: document.getElementById('bm_noon').value || 0,
+                    dinner: document.getElementById('bm_dinner').value || 0
+                },
+                am: {
+                    morning: document.getElementById('am_morning').value || 0,
+                    noon: document.getElementById('am_noon').value || 0,
+                    dinner: document.getElementById('am_dinner').value || 0
+                }
+            };
+
+            const visitObj = { date, history, tests, medication: visitMedication };
+
+            // Check dynamic validation criteria if patient exists
+            if (!appData.patients[name]) {
+                appData.patients[name] = { age: age, visits: [] };
+            } else {
+                appData.patients[name].age = age; // update age parameter changes
+            }
+
+            // Route execution: Edit vs New Save
+            if (editIndexVal !== "") {
+                appData.patients[name].visits[parseInt(editIndexVal)] = visitObj;
+            } else {
+                appData.patients[name].visits.push(visitObj);
+            }
+
+            // Append global keywords database if not duplicate
+            if (tests && !appData.globalTests.includes(tests)) appData.globalTests.push(tests);
+            if (medName && !appData.globalMeds.includes(medName)) appData.globalMeds.push(medName);
+
+            saveToStorage();
+            resetFormForNewPatient();
+            selectPatient(name);
+        }
+
+        // Reset system to clean default states
+        function resetFormForNewPatient() {
+            document.getElementById('clinicalForm').reset();
+            document.getElementById('editVisitIndex').value = "";
+            document.getElementById('formHeader').innerText = "New Clinical Entry";
+            document.getElementById('saveBtn').innerText = "💾 Save Medical Record";
+            document.getElementById('visitDate').valueAsDate = new Date();
+            document.getElementById('historySection').style.display = 'none';
+            
+            const items = document.querySelectorAll('.patient-item');
+            items.forEach(item => item.classList.remove('active'));
+        }
+
+        // Live Sidebar Filter Search 
+        function filterPatients() {
+            const filter = document.getElementById('searchPatient').value.toLowerCase();
+            const items = document.querySelectorAll('.patient-item');
+            
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(filter) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
