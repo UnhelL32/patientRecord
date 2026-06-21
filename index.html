@@ -3,561 +3,1176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinical Patient Record System</title>
+    <title>Project Diary Matrix - Minhaj Civil IUT 10</title>
     <style>
         :root {
-            --primary-color: #1e3a8a;
-            --secondary-color: #3b82f6;
-            --background-color: #f8fafc;
-            --surface-color: #ffffff;
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
-            --border-color: #cbd5e1;
+            --accent: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --border-color: #e2e8f0;
+            --danger: #ef4444;
+            --danger-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            --success: #10b981;
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            --warning: #f59e0b;
+            --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+            --execution: #8b5cf6;
+            --execution-gradient: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        body.dark-theme {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
         }
 
         body {
-            background-color: var(--background-color);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
             color: var(--text-main);
+            line-height: 1.5;
+            margin: 0;
+            padding: 15px;
+            transition: background-color var(--transition), color var(--transition);
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
             padding: 20px;
-            display: flex;
-            gap: 20px;
-            height: 100vh;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+            position: relative;
+            transition: background-color var(--transition), border-color var(--transition);
+        }
+        header h1 { 
+            margin: 0; 
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.2rem; 
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            padding-right: 120px;
+        }
+        header p { margin: 8px 0 0; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; }
+
+        @media (max-width: 600px) {
+            header h1 { padding-right: 0; font-size: 1.8rem; }
+            header { padding-top: 60px; }
         }
 
-        /* Layout Columns */
-        .sidebar {
-            flex: 1;
-            max-width: 320px;
-            background: var(--surface-color);
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        .app-view { display: none; animation: fadeIn 0.3s ease; }
+        .app-view.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            border-top: 5px solid var(--primary-color);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+            transition: background-color var(--transition), border-color var(--transition);
         }
 
-        .main-content {
-            flex: 2;
-            background: var(--surface-color);
+        .box-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .wizard-progress {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            background: var(--border-color);
+            padding: 8px;
             border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            padding: 25px;
-            overflow-y: auto;
-            border-top: 5px solid var(--secondary-color);
+            transition: background-color var(--transition);
         }
-
-        h2, h3 {
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        .section-title {
-            font-size: 1.1rem;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 5px;
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-
-        /* Forms Elements */
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-row {
+        
+        .wizard-step {
+            flex: 1 1 130px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            text-align: center;
+            padding: 10px 4px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             display: flex;
-            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            transition: var(--transition);
         }
 
-        .form-row .form-group {
-            flex: 1;
+        .wizard-step.current {
+            color: #ffffff;
+            background: var(--accent-gradient);
+            border-color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .wizard-step {
+                flex: 1 1 calc(50% - 6px);
+                font-size: 0.7rem;
+                padding: 8px 4px;
+            }
+        }
+
+        .sub-box {
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
+            margin: 15px 0;
+            background: var(--bg-color);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            transition: background-color var(--transition), border-color var(--transition);
         }
 
         label {
             display: block;
             font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--secondary-color);
-        }
-
-        /* Dosage Grid Styling */
-        .dosage-container {
-            background: #f1f5f9;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-        }
-
-        .meal-timing {
-            margin-bottom: 10px;
-        }
-
-        .meal-title {
-            font-size: 0.85rem;
-            font-weight: bold;
+            font-size: 0.8rem;
             color: var(--text-muted);
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             text-transform: uppercase;
         }
 
-        .dosage-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-sizing: border-box;
+            background: var(--bg-color);
+            color: var(--text-main);
+            transition: var(--transition);
+        }
+        input:focus, textarea:focus, select:focus {
+            background: var(--card-bg);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+        textarea { min-height: 80px; resize: vertical; }
+
+        .btn-footer-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
             gap: 10px;
         }
 
-        .dosage-box {
-            text-align: center;
-        }
-
-        .dosage-box span {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .dosage-box input {
-            text-align: center;
-            padding: 5px;
-        }
-
-        /* Buttons */
-        button {
-            cursor: pointer;
-            padding: 10px 15px;
+        .btn {
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-            width: 100%;
-        }
-
-        .btn-primary:hover {
-            background-color: #172554;
-        }
-
-        .btn-secondary {
-            background-color: #e2e8f0;
-            color: var(--text-main);
-        }
-
-        .btn-secondary:hover {
-            background-color: #cbd5e1;
-        }
-
-        /* Lists and Search */
-        .search-box {
-            margin-bottom: 15px;
-        }
-
-        .patient-list {
-            list-style: none;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .patient-item {
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: background 0.2s;
+            color: #fff;
+            background: var(--accent-gradient);
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
         }
-
-        .patient-item:hover {
-            background-color: #f1f5f9;
+        .btn:hover { 
+            transform: translateY(-2px); 
+            opacity: 0.95;
         }
+        .btn:active { transform: translateY(0); }
+        .btn-danger { background: var(--danger-gradient); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
+        .btn-success { background: var(--success-gradient); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); }
+        .btn-secondary { background: #64748b; box-shadow: 0 4px 10px rgba(100, 116, 139, 0.2); }
+        .btn-execution { background: var(--execution-gradient); box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2); }
+        .btn-gdrive { background: linear-gradient(135deg, #34a853 0%, #4285f4 100%); box-shadow: 0 4px 10px rgba(66, 133, 244, 0.2); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; box-shadow: none !important; }
+        .btn-block { width: 100%; padding: 12px; font-size: 1rem; border-radius: var(--radius-lg); }
 
-        .patient-item.active {
-            background-color: #e0f2fe;
-            border-left: 4px solid var(--secondary-color);
-        }
-
-        /* Visit History Timeline */
-        .visit-card {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .visit-date {
+        .year-header {
+            background: var(--text-main);
+            color: var(--card-bg);
+            padding: 10px 15px;
+            font-size: 1.25rem;
             font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 10px;
+            border-radius: var(--radius-md);
+            margin-top: 30px;
+            transition: background-color var(--transition), color var(--transition);
+        }
+        .project-card {
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            margin-top: 15px;
+            border-radius: 6px;
+            overflow: hidden;
+            transition: background-color var(--transition), border-color var(--transition);
+        }
+        .project-summary {
+            padding: 15px;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            transition: background-color var(--transition);
+        }
+        .project-meta-info { font-size: 0.95rem; }
+        .project-meta-info code { background: var(--border-color); padding: 2px 6px; border-radius: 4px; color: var(--accent); transition: var(--transition); }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            font-size: 0.85rem;
+        }
+        .db-table th {
+            background: var(--bg-color);
+            color: var(--text-main);
+            text-align: left;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+        }
+        .db-table td { padding: 8px 10px; border: 1px solid var(--border-color); vertical-align: top; background: var(--card-bg); transition: background-color var(--transition), border-color var(--transition); }
+        .db-table tr:nth-child(even) td { background: var(--bg-color); }
+        .table-responsive { overflow-x: auto; width: 100%; }
+        
+        .detail-section-title {
+            color: var(--accent-light);
+            border-left: 4px solid var(--accent-light);
+            padding-left: 12px;
+            margin: 35px 0 15px 0;
+            font-size: 1.15rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .edit-visit-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+        .gdrive-link-badge {
+            display: inline-block;
+            background: #e8f0fe;
+            color: #1a73e8;
             padding: 4px 8px;
-            font-size: 0.8rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-decoration: none;
+            margin-top: 5px;
+            margin-right: 6px;
+            border: 1px solid #d2e3fc;
+        }
+        body.dark-theme .gdrive-link-badge {
+            background: #1e3a8a;
+            color: #38bdf8;
+            border-color: #1e40af;
         }
 
-        /* Datalist helper text */
-        .hint {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 2px;
+        .link-container-wrapper {
+            background: var(--bg-color);
+            border: 2px dashed var(--border-color);
+            padding: 15px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 15px;
+            transition: background-color var(--transition), border-color var(--transition);
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- SIDEBAR: PATIENT DIRECTORY -->
-    <div class="sidebar">
-        <h2>Patient Directory</h2>
-        <input type="text" id="searchPatient" class="search-box" placeholder="🔍 Search patient by name..." onkeyup="filterPatients()">
-        <ul class="patient-list" id="patientList">
-            <!-- Populated via Javascript -->
-        </ul>
-        <button class="btn-secondary" style="margin-top: 10px;" onclick="resetFormForNewPatient()">+ New Patient / Visit</button>
+<div class="container">
+    <header>
+        <h1>Project Diary &amp; Management Matrix</h1>
+        <p>Created by Minhaj Civil IUT 10</p>
+        <button class="btn btn-sm btn-secondary" id="theme-toggle-btn" onclick="toggleTheme()" style="position: absolute; top: 20px; right: 20px;">🌙 Dark Mode</button>
+    </header>
+
+    <div id="view-home" class="app-view active">
+        <div class="box" style="background: var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 15px; border: none;">
+            <div style="font-size:0.9rem; font-weight:600; color:var(--text-main);">Database Backup &amp; Local Cloud Utilities:</div>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-gdrive" onclick="exportDataToJSON()">📥 Save Backup File to Device</button>
+                <label class="btn btn-sm btn-success" style="margin:0; cursor:pointer;">
+                    📤 Restore from File <input type="file" id="json-file-importer" accept=".json" style="display:none;" onchange="importDataFromJSON(event)">
+                </label>
+                <button class="btn btn-sm" onclick="exportDataToCSV()">📊 Export Spreadsheet (CSV)</button>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="box-title">Master Project Database (Yearwise Summary)</div>
+            <div id="masterDbContainer"></div>
+        </div>
+        <button class="btn btn-success btn-block" onclick="startNewProjectWizard()">＋ Create New Project Entry Record</button>
     </div>
 
-    <!-- MAIN CONTENT: CASE FILE & INPUT -->
-    <div class="main-content">
-        <h2 id="formHeader">New Clinical Entry</h2>
-        
-        <form id="clinicalForm" onsubmit="savePatientRecord(event)">
-            <input type="hidden" id="editVisitIndex" value="">
-
-            <div class="form-row">
-                <!-- Patient Name with Dropdown Autocomplete via Datalist -->
-                <div class="form-group">
-                    <label for="patientName">Patient Name *</label>
-                    <input type="text" id="patientName" list="pastPatients" required onchange="handleNameSelection(this.value)">
-                    <datalist id="pastPatients"></datalist>
-                    <div class="hint">Type to search or auto-fill existing patient</div>
-                </div>
-                
-                <div class="form-group" style="max-width: 120px;">
-                    <label for="patientAge">Age</label>
-                    <input type="number" id="patientAge" min="0" max="150">
-                </div>
-
-                <div class="form-group" style="max-width: 200px;">
-                    <label for="visitDate">Date</label>
-                    <input type="date" id="visitDate" required>
-                </div>
+    <div id="view-full-details" class="app-view">
+        <div class="box">
+            <div class="box-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="details-page-title">Project Deep-Dive Records</span>
+                <button class="btn btn-sm btn-success" onclick="window.print()">🖨️ Print Project Dossier</button>
             </div>
+            
+            <div id="fullDetailsRenderContainer"></div>
 
-            <div class="form-group">
-                <label for="patientHistory">Clinical History / Complaints</label>
-                <textarea id="patientHistory" rows="3" placeholder="Symptoms, duration, chronic conditions..."></textarea>
+            <div class="btn-footer-nav">
+                <button class="btn btn-secondary" onclick="navigateToHome()">← Back to Homepage Database</button>
             </div>
-
-            <!-- Tests Section -->
-            <div class="form-group">
-                <label for="prescribedTests">Prescribed Investigations / Tests</label>
-                <input type="text" id="prescribedTests" list="pastTests" placeholder="e.g., CBC, Serum Creatinine, X-Ray Chest">
-                <datalist id="pastTests"></datalist>
-                <div class="hint">Type to select from previously used tests</div>
-            </div>
-
-            <!-- Medication Section -->
-            <div class="section-title">Medication & Dosage Matrix</div>
-            <div class="form-group">
-                <label for="medicationName">Medication Name</label>
-                <input type="text" id="medicationName" list="pastMeds" placeholder="e.g., Amoxicillin 500mg, Metformin 800mg">
-                <datalist id="pastMeds"></datalist>
-                
-                <!-- Advanced Dose Scheduler requested -->
-                <div class="dosage-container">
-                    <!-- Before Meal Option -->
-                    <div class="meal-timing">
-                        <div class="meal-title">Before Meal (Ante Cibum)</div>
-                        <div class="dosage-grid">
-                            <div class="dosage-box"><span>Morning</span><input type="number" id="bm_morning" min="0" step="0.5" placeholder="0"></div>
-                            <div class="dosage-box"><span>Noon</span><input type="number" id="bm_noon" min="0" step="0.5" placeholder="0"></div>
-                            <div class="dosage-box"><span>Dinner</span><input type="number" id="bm_dinner" min="0" step="0.5" placeholder="0"></div>
-                        </div>
-                    </div>
-                    <!-- After Meal Option -->
-                    <div class="meal-timing">
-                        <div class="meal-title">After Meal (Post Cibum)</div>
-                        <div class="dosage-grid">
-                            <div class="dosage-box"><span>Morning</span><input type="number" id="am_morning" min="0" step="0.5" placeholder="0"></div>
-                            <div class="dosage-box"><span>Noon</span><input type="number" id="am_noon" min="0" step="0.5" placeholder="0"></div>
-                            <div class="dosage-box"><span>Dinner</span><input type="number" id="am_dinner" min="0" step="0.5" placeholder="0"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-primary" id="saveBtn">💾 Save Medical Record</button>
-        </form>
-
-        <!-- Dynamic History Summary of the Selected Patient -->
-        <div id="historySection" style="margin-top: 30px; display: none;">
-            <div class="section-title">Patient Medical History Timeline</div>
-            <div id="visitTimeline"></div>
         </div>
     </div>
 
-    <script>
-        // Database Structure stored in LocalStorage
-        let appData = {
-            patients: {},      // Key: Patient Name (Case-Insensitive lookup), Value: { age: x, visits: [...] }
-            globalTests: [],   // Array tracking unique tests for dropdown
-            globalMeds: []     // Array tracking unique medications for dropdown
-        };
-
-        // Initialize App on load
-        window.onload = function() {
-            if (localStorage.getItem('clinicalAppData')) {
-                appData = JSON.parse(localStorage.getItem('clinicalAppData'));
-            }
-            // Set today's default date
-            document.getElementById('visitDate').valueAsDate = new Date();
-            refreshDirectories();
-        };
-
-        function saveToStorage() {
-            localStorage.setItem('clinicalAppData', JSON.stringify(appData));
-            refreshDirectories();
-        }
-
-        // Refresh Lists, Datalists and Autocompletes
-        function refreshDirectories() {
-            const listContainer = document.getElementById('patientList');
-            const patientDatalist = document.getElementById('pastPatients');
-            const testDatalist = document.getElementById('pastTests');
-            const medDatalist = document.getElementById('pastMeds');
-
-            // Clear previous items
-            listContainer.innerHTML = '';
-            patientDatalist.innerHTML = '';
-            testDatalist.innerHTML = '';
-            medDatalist.innerHTML = '';
-
-            // Populate Patient Lists
-            Object.keys(appData.patients).sort().forEach(name => {
-                const li = document.createElement('li');
-                li.className = 'patient-item';
-                li.innerText = name;
-                li.onclick = () => selectPatient(name);
-                listContainer.appendChild(li);
-
-                const option = document.createElement('option');
-                option.value = name;
-                patientDatalist.appendChild(option);
-            });
-
-            // Populate unique global tests dropdown
-            appData.globalTests.forEach(test => {
-                const option = document.createElement('option');
-                option.value = test;
-                testDatalist.appendChild(option);
-            });
-
-            // Populate unique global medications dropdown
-            appData.globalMeds.forEach(med => {
-                const option = document.createElement('option');
-                option.value = med;
-                medDatalist.appendChild(option);
-            });
-        }
-
-        // When a user types/selects an existing patient in the input field
-        function handleNameSelection(name) {
-            if (!name) return;
-            // Match case insensitively if exact string matches list
-            const matchedName = Object.keys(appData.patients).find(k => k.toLowerCase() === name.trim().toLowerCase());
-            if (matchedName) {
-                selectPatient(matchedName);
-            }
-        }
-
-        // Select a patient and show historical timeline
-        function selectPatient(name) {
-            const patient = appData.patients[name];
-            document.getElementById('patientName').value = name;
-            document.getElementById('patientAge').value = patient.age || '';
+    <div id="view-wizard-p1" class="app-view">
+        <div class="wizard-progress">
+            <span class="wizard-step current">1. Metadata</span>
+            <span class="wizard-step">2. Logs &amp; Decisions</span>
+            <span class="wizard-step">3. Layouts &amp; Drawings</span>
+            <span class="wizard-step">4. Budget Approval</span>
+            <span class="wizard-step">5. Tender Process</span>
+            <span class="wizard-step">6. Work Execution</span>
+        </div>
+        <div class="box">
+            <div class="box-title">Step 1: Core Project Parameters</div>
+            <label>Project ID *</label>
+            <input type="text" id="w-projId" placeholder="e.g., IUT-CIVIL-2026-99">
+            <label>Financial Year (FY) *</label>
+            <input type="text" id="w-projFy" placeholder="e.g., 2026-2027">
+            <label>Name of Project *</label>
+            <input type="text" id="w-projName" placeholder="Enter full administrative name">
+            <label>Details of Project</label>
+            <textarea id="w-projDetails" placeholder="Scope details, measurements, geo-locations..."></textarea>
             
-            // Highlight item in directory sidebar
-            const items = document.querySelectorAll('.patient-item');
-            items.forEach(item => {
-                item.classList.toggle('active', item.innerText === name);
+            <div class="link-container-wrapper gdrive-input-box-area">
+                <label style="color:var(--accent-light);">Link Google Drive Reference Documents (Unlimited)</label>
+                <div id="p1-links-list"></div>
+                <button class="btn btn-sm" type="button" onclick="addNewDriveLinkInputRow('p1-links-list')">＋ Attach Drive Link</button>
+            </div>
+
+            <div class="btn-footer-nav">
+                <button class="btn btn-secondary" onclick="navigateToHome()">← Return Home</button>
+                <button class="btn" onclick="saveP1AndNext()">Next Page (Logs) →</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-wizard-p2" class="app-view">
+        <div class="wizard-progress">
+            <span class="wizard-step">1. Metadata</span>
+            <span class="wizard-step current">2. Logs &amp; Decisions</span>
+            <span class="wizard-step">3. Layouts &amp; Drawings</span>
+            <span class="wizard-step">4. Budget Approval</span>
+            <span class="wizard-step">5. Tender Process</span>
+            <span class="wizard-step">6. Work Execution</span>
+        </div>
+        <div class="box">
+            <div class="box-title">Step 2: Add Datewise Operational Diary Entry</div>
+            <label>Log Entry Target Date</label>
+            <input type="date" id="p2-date">
+            
+            <label>Datewise Plan Details</label>
+            <textarea id="p2-plan" placeholder="Operational milestones planned..."></textarea>
+
+            <label>Datewise Important Decision</label>
+            <textarea id="p2-decision" placeholder="Resolutions or parameters chosen..."></textarea>
+            <div class="sub-box">
+                <label>Datewise Work Executed As Per Decision</label>
+                <textarea id="p2-work" placeholder="Sub-part: Work completed on site..."></textarea>
+            </div>
+
+            <label>Datewise Problem Faced</label>
+            <textarea id="p2-problem" placeholder="Delays, materials, engineering hurdles..."></textarea>
+            <div class="sub-box">
+                <label>Solutions Discussed</label>
+                <textarea id="p2-solDisc" placeholder="Options or brainstorming notes..."></textarea>
+                <label style="margin-top:10px;">Solutions Implemented</label>
+                <textarea id="p2-solImpl" placeholder="Final countermeasure deployment details..."></textarea>
+            </div>
+
+            <div class="link-container-wrapper gdrive-input-box-area">
+                <label style="color:var(--accent-light);">Attach Google Drive Docs/Images to this Log Entry</label>
+                <div id="p2-links-list"></div>
+                <button class="btn btn-sm" type="button" onclick="addNewDriveLinkInputRow('p2-links-list')">＋ Attach Drive Link</button>
+            </div>
+
+            <button class="btn btn-success" onclick="commitP2Log()">Commit Dynamic Log Row</button>
+            <div id="p2-running-table-container" style="margin-top:20px; overflow-x:auto;"></div>
+
+            <div class="btn-footer-nav">
+                <button class="btn btn-secondary" onclick="switchView('view-wizard-p1')">← Previous</button>
+                <button class="btn" onclick="switchView('view-wizard-p3')">Next Page (Design) →</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-wizard-p3" class="app-view">
+        <div class="wizard-progress">
+            <span class="wizard-step">1. Metadata</span>
+            <span class="wizard-step">2. Logs &amp; Decisions</span>
+            <span class="wizard-step current">3. Layouts &amp; Drawings</span>
+            <span class="wizard-step">4. Budget Approval</span>
+            <span class="wizard-step">5. Tender Process</span>
+            <span class="wizard-step">6. Work Execution</span>
+        </div>
+        <div class="box">
+            <div class="box-title">Step 3: Layout Tracking &amp; Structural Drawings</div>
+            <label>Date</label>
+            <input type="date" id="p3-date">
+            <label>Datewise Draft Layout Details</label>
+            <textarea id="p3-draft" placeholder="Alignments, survey notes, spatial adjustments..."></textarea>
+            <label>Note Sent to Layout Committee / Design &amp; Drawing Dept.</label>
+            <textarea id="p3-note" placeholder="Memo reference, issues submitted for clearance..."></textarea>
+
+            <div class="link-container-wrapper gdrive-input-box-area">
+                <label style="color:var(--accent-light);">Attach Layout Blueprints/Drawings (Google Drive Link)</label>
+                <div id="p3-links-list"></div>
+                <button class="btn btn-sm" type="button" onclick="addNewDriveLinkInputRow('p3-links-list')">＋ Attach Drive Link</button>
+            </div>
+
+            <button class="btn btn-success" onclick="commitP3Log()">Commit Design Log Row</button>
+            <div id="p3-running-table-container" style="margin-top:20px; overflow-x:auto;"></div>
+
+            <div class="btn-footer-nav">
+                <button class="btn btn-secondary" onclick="switchView('view-wizard-p2')">← Previous</button>
+                <button class="btn" onclick="switchView('view-wizard-p4')">Next Page (Budget Approval) →</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-wizard-p4" class="app-view">
+        <div class="wizard-progress">
+            <span class="wizard-step">1. Metadata</span>
+            <span class="wizard-step">2. Logs &amp; Decisions</span>
+            <span class="wizard-step">3. Layouts &amp; Drawings</span>
+            <span class="wizard-step current">4. Budget Approval</span>
+            <span class="wizard-step">5. Tender Process</span>
+            <span class="wizard-step">6. Work Execution</span>
+        </div>
+        <div class="box">
+            <div class="box-title">Step 4: Budget Approval Mapping</div>
+            <label>Log Reference Date</label>
+            <input type="date" id="p4-date">
+            <label>Budget Type</label>
+            <input type="text" id="p4-type" placeholder="e.g., Capital, Revenue Allocation, Grant Fund">
+            <label>Datewise Budget Decisions</label>
+            <textarea id="p4-decision" placeholder="Sanctions, modifications, revisions..."></textarea>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div>
+                    <label>Budget Receive Date</label>
+                    <input type="date" id="p4-recDate">
+                </div>
+                <div>
+                    <label>Amount Received</label>
+                    <input type="number" id="p4-amount" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="link-container-wrapper gdrive-input-box-area">
+                <label style="color:var(--accent-light);">Attach Budget Approvals / Scan Copies (Google Drive)</label>
+                <div id="p4-links-list"></div>
+                <button class="btn btn-sm" type="button" onclick="addNewDriveLinkInputRow('p4-links-list')">＋ Attach Drive Link</button>
+            </div>
+
+            <button class="btn btn-success" onclick="commitP4Log()">Commit Budget Log Row</button>
+            <div id="p4-running-table-container" style="margin-top:20px; overflow-x:auto;"></div>
+
+            <div class="btn-footer-nav">
+                <button class="btn btn-secondary" onclick="switchView('view-wizard-p3')">← Previous</button>
+                <button class="btn" onclick="switchView('view-wizard-p5')">Next Page (Tender Process) →</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-wizard-p5" class="app-view">
+        <div class="wizard-progress">
+            <span class="wizard-step">1. Metadata</span>
+            <span class="wizard-step">2. Logs &amp; Decisions</span>
+            <span class="wizard-step">3. Layouts &amp; Drawings</span>
+            <span class="wizard-step">4. Budget Approval</span>
+            <span class="wizard-step current">5. Tender Process</span>
+            <span class="wizard-step">6. Work Execution</span>
+        </div>
+        <div class="box">
+            <div class="box-title">Step 5: Tender Process &amp; Procurement Records</div>
+            <label>Log Entry Date</label>
+            <input type="date" id="p5-date">
+            <label>Tender ID</label>
+            <input type="text" id="p5-tenderId" placeholder="e.g., IUT/TND-2026-A">
+            <label>Datewise Tender Info with APP Info</label>
+            <textarea id="p5-appInfo" placeholder="Annual Procurement Plan line-item connection context..."></textarea>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                <div>
+                    <label>Approved Date</label>
+                    <input type="date" id="p5-appDate">
+                </div>
+                <div>
+                    <label>Winning Bidder Name</label>
+                    <input type="text" id="p5-bidder" placeholder="Vendor / Contractor Name">
+                </div>
+                <div>
+                    <label>Value</label>
+                    <input type="number" id="p5-value" placeholder="Contract Worth">
+                </div>
+            </div>
+
+            <div class="link-container-wrapper gdrive-input-box-area">
+                <label style="color:var(--accent-light);">Attach Tendering Notices / Contractor Bid Forms</label>
+                <div id="p5-links-list"></div>
+                <button class="btn btn-sm" type="button" onclick="addNewDriveLinkInputRow('p5-links-list')">＋ Attach Drive Link</button>
+            </div>
+
+            <button class="btn btn-success" onclick="commitP5Log()">Commit Tender Log Row</button>
+            <div id="p5-running-table-container" style="margin-top:20px; overflow-x:auto;"></div>
+
+            <div class="btn-footer-nav">
+                <button class="btn btn-secondary" onclick="switchView('view-wizard-p4')">← Previous</button>
+                <button class="btn" onclick="switchView('view-wizard-p6')">Next Page (Work Execution) →</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-wizard-p6" class="app-view">
+        <div class="wizard-progress">
+            <span class="wizard-step">1. Metadata</span>
+            <span class="wizard-step">2. Logs &amp; Decisions</span>
+            <span class="wizard-step">3. Layouts &amp; Drawings</span>
+            <span class="wizard-step">4. Budget Approval</span>
+            <span class="wizard-step">5. Tender Process</span>
+            <span class="wizard-step current">6. Work Execution</span>
+        </div>
+        <div class="box" style="border-top: 5px solid var(--execution);">
+            <div class="box-title" style="color: var(--execution);">Step 6: Work Execution Phase</div>
+            <label>Execution Log Date</label>
+            <input type="date" id="p6-date">
+            
+            <label>Work Component / Task Description</label>
+            <input type="text" id="p6-component" placeholder="e.g., Piling Work, Superstructure Framing, Concreting">
+            
+            <label>Site Progress Status &amp; Achievements</label>
+            <textarea id="p6-progress" placeholder="Describe physical or structural targets completed on site..."></textarea>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div>
+                    <label>Physical Progress (%)</label>
+                    <input type="number" id="p6-percent" min="0" max="100" placeholder="e.g., 45">
+                </div>
+                <div>
+                    <label>Supervising Engineer Remarks</label>
+                    <input type="text" id="p6-remarks" placeholder="Quality checks, site engineer updates">
+                </div>
+            </div>
+
+            <div class="link-container-wrapper gdrive-input-box-area">
+                <label style="color:var(--execution);">Attach Execution Field Reports / Site Quality Photos (Google Drive)</label>
+                <div id="p6-links-list"></div>
+                <button class="btn btn-sm btn-execution" type="button" onclick="addNewDriveLinkInputRow('p6-links-list')">＋ Attach Drive Link</button>
+            </div>
+
+            <button class="btn btn-execution" onclick="commitP6Log()">Commit Execution Log Row</button>
+            <div id="p6-running-table-container" style="margin-top:20px; overflow-x:auto;"></div>
+
+            <div class="btn-footer-nav">
+                <button class="btn btn-secondary" onclick="switchView('view-wizard-p5')">← Previous Page</button>
+                <button class="btn" onclick="navigateToHome()">Finish &amp; Save Master Dossier ✓</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Local memory sync initialization parameters
+    let database = [];
+    try {
+        const rawLocalData = localStorage.getItem('wizard_diary_data_v4_execution');
+        if(rawLocalData) {
+            database = JSON.parse(rawLocalData);
+            database.forEach(p => {
+                if(!p.metaLinks) p.metaLinks = [];
+                if(!p.plans) p.plans = [];
+                if(!p.decisions) p.decisions = [];
+                if(!p.problems) p.problems = [];
+                if(!p.layouts) p.layouts = [];
+                if(!p.budgets) p.budgets = [];
+                if(!p.tenders) p.tenders = [];
+                if(!p.executions) p.executions = [];
             });
-
-            renderTimeline(name);
         }
+    } catch(err) {
+        console.error("Local storage error parsed, resetting clean.", err);
+        database = [];
+    }
 
-        // Render historical timeline cards
-        function renderTimeline(name) {
-            const patient = appData.patients[name];
-            const timeline = document.getElementById('visitTimeline');
-            const historySection = document.getElementById('historySection');
-            
-            timeline.innerHTML = '';
-            
-            if (patient && patient.visits.length > 0) {
-                historySection.style.display = 'block';
-                
-                // Sort visits by date descending
-                const sortedVisits = [...patient.visits].sort((a,b) => new Date(b.date) - new Date(a.date));
+    let currentWorkingProjId = null; 
+    let isEditingExistingMode = false;
 
-                sortedVisits.forEach((visit, index) => {
-                    // Original index map tracking for editing accuracy
-                    const originalIndex = patient.visits.indexOf(visit);
+    window.onload = function() {
+        const savedTheme = localStorage.getItem('diary_theme');
+        if(savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+            document.getElementById('theme-toggle-btn').innerText = '☀️ Light Mode';
+        }
+        renderMasterDatabase();
+    };
 
-                    const card = document.createElement('div');
-                    card.className = 'visit-card';
-                    
-                    let medDetails = visit.medication.name ? `<strong>Medication:</strong> ${visit.medication.name}<br>` : '';
-                    if (visit.medication.name) {
-                        medDetails += `<span style="font-size:0.85rem; color:var(--text-muted);">
-                            Before Meal [M:${visit.medication.bm.morning}, N:${visit.medication.bm.noon}, D:${visit.medication.bm.dinner}] | 
-                            After Meal [M:${visit.medication.am.morning}, N:${visit.medication.am.noon}, D:${visit.medication.am.dinner}]
-                        </span>`;
+    function toggleTheme() {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        localStorage.setItem('diary_theme', isDark ? 'dark' : 'light');
+        document.getElementById('theme-toggle-btn').innerText = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+    }
+
+    // --- MANUAL BACKUP FILE UTILITIES ---
+    function exportDataToJSON() {
+        if(database.length === 0) return alert("No active data entries to backup.");
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(database, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `Project_Diary_Backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        document.body.removeChild(downloadAnchor);
+    }
+
+    function importDataFromJSON(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsedData = JSON.parse(e.target.result);
+                if(Array.isArray(parsedData)) {
+                    if(confirm("Successfully verified backup file. Do you want to overwrite your local app history?")) {
+                        database = parsedData;
+                        syncMemory();
+                        renderMasterDatabase();
+                        alert("Database restored successfully!");
                     }
-
-                    card.innerHTML = `
-                        <div class="visit-date">📅 Visit Date: ${visit.date}</div>
-                        <button type="button" class="btn-secondary edit-visit-btn" onclick="editVisit('${name}', ${originalIndex})">📝 Edit</button>
-                        <p style="margin-bottom:8px;"><strong>History:</strong> ${visit.history || 'N/A'}</p>
-                        <p style="margin-bottom:8px;"><strong>Tests:</strong> ${visit.tests || 'None Specified'}</p>
-                        <div>${medDetails}</div>
-                    `;
-                    timeline.appendChild(card);
-                });
-            } else {
-                historySection.style.display = 'none';
-            }
-        }
-
-        // Trigger edit state for a specific historical entry
-        function editVisit(name, index) {
-            const visit = appData.patients[name].visits[index];
-            
-            document.getElementById('formHeader').innerText = `Editing Visit Details for ${name}`;
-            document.getElementById('patientName').value = name;
-            document.getElementById('patientAge').value = appData.patients[name].age;
-            document.getElementById('visitDate').value = visit.date;
-            document.getElementById('patientHistory').value = visit.history;
-            document.getElementById('prescribedTests').value = visit.tests;
-            
-            // Populate Med details back into grid
-            document.getElementById('medicationName').value = visit.medication.name || '';
-            document.getElementById('bm_morning').value = visit.medication.bm?.morning || '';
-            document.getElementById('bm_noon').value = visit.medication.bm?.noon || '';
-            document.getElementById('bm_dinner').value = visit.medication.bm?.dinner || '';
-            document.getElementById('am_morning').value = visit.medication.am?.morning || '';
-            document.getElementById('am_noon').value = visit.medication.am?.noon || '';
-            document.getElementById('am_dinner').value = visit.medication.am?.dinner || '';
-
-            // Set hidden reference tracker values
-            document.getElementById('editVisitIndex').value = index;
-            document.getElementById('saveBtn').innerText = "🔄 Update Medical Record";
-            document.getElementById('patientName').focus();
-        }
-
-        // Save entry handler (Handles both new inserts and structural updates)
-        function savePatientRecord(e) {
-            e.preventDefault();
-
-            const name = document.getElementById('patientName').value.trim();
-            const age = document.getElementById('patientAge').value;
-            const date = document.getElementById('visitDate').value;
-            const history = document.getElementById('patientHistory').value;
-            const tests = document.getElementById('prescribedTests').value.trim();
-            const medName = document.getElementById('medicationName').value.trim();
-            
-            const editIndexVal = document.getElementById('editVisitIndex').value;
-
-            // Gather prescription block
-            const visitMedication = {
-                name: medName,
-                bm: {
-                    morning: document.getElementById('bm_morning').value || 0,
-                    noon: document.getElementById('bm_noon').value || 0,
-                    dinner: document.getElementById('bm_dinner').value || 0
-                },
-                am: {
-                    morning: document.getElementById('am_morning').value || 0,
-                    noon: document.getElementById('am_noon').value || 0,
-                    dinner: document.getElementById('am_dinner').value || 0
+                } else {
+                    alert("Invalid backup file architecture constraint structure.");
                 }
-            };
-
-            const visitObj = { date, history, tests, medication: visitMedication };
-
-            // Check dynamic validation criteria if patient exists
-            if (!appData.patients[name]) {
-                appData.patients[name] = { age: age, visits: [] };
-            } else {
-                appData.patients[name].age = age; // update age parameter changes
+            } catch(err) {
+                alert("Error reading file parsing matrix data properties.");
             }
+        };
+        reader.readAsText(file);
+    }
 
-            // Route execution: Edit vs New Save
-            if (editIndexVal !== "") {
-                appData.patients[name].visits[parseInt(editIndexVal)] = visitObj;
-            } else {
-                appData.patients[name].visits.push(visitObj);
+    function addNewDriveLinkInputRow(containerId, initialValue = "", initialLabel = "") {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        const div = document.createElement('div');
+        div.className = 'gdrive-input-row';
+        div.style.display = 'flex';
+        div.style.gap = '10px';
+        div.style.marginBottom = '8px';
+        div.innerHTML = `
+            <input type="text" class="gdrive-label-field" placeholder="Label Description" value="${initialLabel}" style="width:35%; margin:0; padding:8px; border-width:1px;">
+            <input type="url" class="gdrive-url-field" placeholder="https://drive.google.com/..." value="${initialValue}" style="width:55%; margin:0; padding:8px; border-width:1px;">
+            <button class="btn btn-danger btn-sm" type="button" onclick="this.parentElement.remove()" style="width:10%; padding:0; height:38px;">&times;</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function collectDriveLinksFromContainer(containerId) {
+        const container = document.getElementById(containerId);
+        if(!container) return [];
+        const rows = container.querySelectorAll('.gdrive-input-row');
+        let extractedLinks = [];
+        rows.forEach(row => {
+            const label = row.querySelector('.gdrive-label-field').value.trim();
+            const url = row.querySelector('.gdrive-url-field').value.trim();
+            if(url) {
+                extractedLinks.push({ name: label || "Linked Document", link: url });
             }
+        });
+        return extractedLinks;
+    }
 
-            // Append global keywords database if not duplicate
-            if (tests && !appData.globalTests.includes(tests)) appData.globalTests.push(tests);
-            if (medName && !appData.globalMeds.includes(medName)) appData.globalMeds.push(medName);
+    function buildGDriveHtmlBadges(linksArray) {
+        if(!linksArray || linksArray.length === 0) return "";
+        return "<div style='margin-top:4px;'>" + linksArray.map(l => `
+            <a href="${l.link}" target="_blank" class="gdrive-link-badge">📂 ${l.name}</a>
+        `).join(' ') + "</div>";
+    }
 
-            saveToStorage();
-            resetFormForNewPatient();
-            selectPatient(name);
+    function switchView(viewId) {
+        document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+        const targetView = document.getElementById(viewId);
+        if(targetView) targetView.classList.add('active');
+        window.scrollTo(0,0);
+        
+        if(viewId === 'view-wizard-p2') renderSubTablesPage2();
+        if(viewId === 'view-wizard-p3') renderSubTablesPage3();
+        if(viewId === 'view-wizard-p4') renderSubTablesPage4();
+        if(viewId === 'view-wizard-p5') renderSubTablesPage5();
+        if(viewId === 'view-wizard-p6') renderSubTablesPage6();
+    }
+
+    function navigateToHome() {
+        currentWorkingProjId = null;
+        isEditingExistingMode = false;
+        renderMasterDatabase();
+        switchView('view-home');
+    }
+
+    function startNewProjectWizard() {
+        currentWorkingProjId = null;
+        isEditingExistingMode = false;
+        
+        document.getElementById('w-projId').disabled = false;
+        document.getElementById('w-projId').value = "";
+        document.getElementById('w-projFy').value = "";
+        document.getElementById('w-projName').value = "";
+        document.getElementById('w-projDetails').value = "";
+        
+        const p1Links = document.getElementById('p1-links-list');
+        if(p1Links) p1Links.innerHTML = "";
+        
+        clearPageFormFields();
+        switchView('view-wizard-p1');
+    }
+
+    function saveP1AndNext() {
+        const id = document.getElementById('w-projId').value.trim();
+        const fy = document.getElementById('w-projFy').value.trim();
+        const name = document.getElementById('w-projName').value.trim();
+        const details = document.getElementById('w-projDetails').value.trim();
+        const links = collectDriveLinksFromContainer('p1-links-list');
+
+        if(!id || !fy || !name) return alert("Error: Fields marked with * are required.");
+
+        if(!isEditingExistingMode) {
+            if(database.some(p => p.id.toLowerCase() === id.toLowerCase())) {
+                return alert("Primary Key Conflict: This Project ID already exists.");
+            }
+            let targetObj = { id, fy, projectName: name, details, metaLinks: links, plans:[], decisions:[], problems:[], layouts:[], budgets:[], tenders:[], executions:[] };
+            database.push(targetObj);
+            currentWorkingProjId = id;
+            isEditingExistingMode = true; 
+        } else {
+            let idx = database.findIndex(p => p.id === currentWorkingProjId);
+            if(idx !== -1) {
+                database[idx].fy = fy;
+                database[idx].projectName = name;
+                database[idx].details = details;
+                database[idx].metaLinks = links;
+            }
+        }
+        syncMemory();
+        switchView('view-wizard-p2');
+    }
+
+    function getCurrentProjectRef() {
+        return database.find(p => p.id === currentWorkingProjId);
+    }
+
+    function commitP2Log() {
+        const p = getCurrentProjectRef();
+        const d = document.getElementById('p2-date').value;
+        if(!d) return alert("Select an entry log target date.");
+
+        const links = collectDriveLinksFromContainer('p2-links-list');
+        const planText = document.getElementById('p2-plan').value;
+        const decText = document.getElementById('p2-decision').value;
+        const workText = document.getElementById('p2-work').value;
+        const probText = document.getElementById('p2-problem').value;
+        const discText = document.getElementById('p2-solDisc').value;
+        const implText = document.getElementById('p2-solImpl').value;
+
+        if(planText) p.plans.push({ id: 'L-'+Date.now()+'a', date: d, text: planText, attachments: links });
+        if(decText || workText) p.decisions.push({ id: 'L-'+Date.now()+'b', date: d, decision: decText, work: workText, attachments: links });
+        if(probText || discText || implText) p.problems.push({ id: 'L-'+Date.now()+'c', date: d, problem: probText, discussed: discText, implemented: implText, attachments: links });
+
+        syncMemory();
+        clearPageFormFields();
+        document.getElementById('p2-links-list').innerHTML = "";
+        renderSubTablesPage2();
+    }
+
+    function commitP3Log() {
+        const p = getCurrentProjectRef();
+        const d = document.getElementById('p3-date').value;
+        if(!d) return alert("Select an entry log target date.");
+
+        p.layouts.push({
+            id: 'L-'+Date.now(), date: d,
+            draft: document.getElementById('p3-draft').value,
+            note: document.getElementById('p3-note').value,
+            attachments: collectDriveLinksFromContainer('p3-links-list')
+        });
+
+        syncMemory();
+        clearPageFormFields();
+        document.getElementById('p3-links-list').innerHTML = "";
+        renderSubTablesPage3();
+    }
+
+    function commitP4Log() {
+        const p = getCurrentProjectRef();
+        const d = document.getElementById('p4-date').value;
+        if(!d) return alert("Select an entry log target date.");
+
+        p.budgets.push({
+            id: 'L-'+Date.now(), date: d,
+            type: document.getElementById('p4-type').value,
+            decision: document.getElementById('p4-decision').value,
+            recDate: document.getElementById('p4-recDate').value,
+            amount: document.getElementById('p4-amount').value,
+            attachments: collectDriveLinksFromContainer('p4-links-list')
+        });
+
+        syncMemory();
+        clearPageFormFields();
+        document.getElementById('p4-links-list').innerHTML = "";
+        renderSubTablesPage4();
+    }
+
+    function commitP5Log() {
+        const p = getCurrentProjectRef();
+        const d = document.getElementById('p5-date').value;
+        if(!d) return alert("Select an entry log target date.");
+
+        p.tenders.push({
+            id: 'L-'+Date.now(), date: d,
+            tenderId: document.getElementById('p5-tenderId').value,
+            appInfo: document.getElementById('p5-appInfo').value,
+            appDate: document.getElementById('p5-appDate').value,
+            bidder: document.getElementById('p5-bidder').value,
+            value: document.getElementById('p5-value').value,
+            attachments: collectDriveLinksFromContainer('p5-links-list')
+        });
+
+        syncMemory();
+        clearPageFormFields();
+        document.getElementById('p5-links-list').innerHTML = "";
+        renderSubTablesPage5();
+    }
+
+    function commitP6Log() {
+        const p = getCurrentProjectRef();
+        const d = document.getElementById('p6-date').value;
+        if(!d) return alert("Select a work execution entry date.");
+
+        p.executions.push({
+            id: 'L-'+Date.now(), date: d,
+            component: document.getElementById('p6-component').value.trim(),
+            progress: document.getElementById('p6-progress').value.trim(),
+            percent: document.getElementById('p6-percent').value.trim(),
+            remarks: document.getElementById('p6-remarks').value.trim(),
+            attachments: collectDriveLinksFromContainer('p6-links-list')
+        });
+
+        syncMemory();
+        clearPageFormFields();
+        document.getElementById('p6-links-list').innerHTML = "";
+        renderSubTablesPage6();
+    }
+
+    function renderSubTablesPage2() {
+        const p = getCurrentProjectRef();
+        let html = `<h4>Current Operational Logs:</h4>`;
+        html += `<table class="db-table"><tr><th>Type</th><th>Date</th><th>Logged Value</th><th>Action</th></tr>`;
+        p.plans.forEach(r => html += `<tr><td>Plan</td><td>${r.date}</td><td>${r.text} ${buildGDriveHtmlBadges(r.attachments)}</td><td><button class="btn btn-sm btn-danger" onclick="removeSubRow('plans','${r.id}','view-wizard-p2')">&times;</button></td></tr>`);
+        p.decisions.forEach(r => html += `<tr><td>Decision</td><td>${r.date}</td><td><strong>Decision:</strong> ${r.decision}<br><strong>Work:</strong> ${r.work} ${buildGDriveHtmlBadges(r.attachments)}</td><td><button class="btn btn-sm btn-danger" onclick="removeSubRow('decisions','${r.id}','view-wizard-p2')">&times;</button></td></tr>`);
+        p.problems.forEach(r => html += `<tr><td>Problem</td><td>${r.date}</td><td><strong>Problem:</strong> ${r.problem}<br><strong>Solutions:</strong> ${r.discussed || r.implemented} ${buildGDriveHtmlBadges(r.attachments)}</td><td><button class="btn btn-sm btn-danger" onclick="removeSubRow('problems','${r.id}','view-wizard-p2')">&times;</button></td></tr>`);
+        html += `</table>`;
+        const container = document.getElementById('p2-running-table-container');
+        if(container) container.innerHTML = (p.plans.length + p.decisions.length + p.problems.length === 0) ? "" : html;
+    }
+
+    function renderSubTablesPage3() {
+        const p = getCurrentProjectRef();
+        let html = `<table class="db-table"><tr><th>Date</th><th>Draft Layout</th><th>Note sent</th><th>Action</th></tr>`;
+        p.layouts.forEach(r => html += `<tr><td>${r.date}</td><td>${r.draft} ${buildGDriveHtmlBadges(r.attachments)}</td><td>${r.note}</td><td><button class="btn btn-sm btn-danger" onclick="removeSubRow('layouts','${r.id}','view-wizard-p3')">&times;</button></td></tr>`);
+        html += `</table>`;
+        const container = document.getElementById('p3-running-table-container');
+        if(container) container.innerHTML = p.layouts.length === 0 ? "" : html;
+    }
+
+    function renderSubTablesPage4() {
+        const p = getCurrentProjectRef();
+        let html = `<table class="db-table"><tr><th>Date</th><th>Type</th><th>Decision</th><th>Received Date</th><th>Amount</th><th>Action</th></tr>`;
+        p.budgets.forEach(r => html += `<tr><td>${r.date}</td><td>${r.type}</td><td>${r.decision} ${buildGDriveHtmlBadges(r.attachments)}</td><td>${r.recDate}</td><td>${Number(r.amount).toLocaleString()}</td><td><button class="btn btn-sm btn-danger" onclick="removeSubRow('budgets','${r.id}','view-wizard-p4')">&times;</button></td></tr>`);
+        html += `</table>`;
+        const container = document.getElementById('p4-running-table-container');
+        if(container) container.innerHTML = p.budgets.length === 0 ? "" : html;
+    }
+
+    function renderSubTablesPage5() {
+        const p = getCurrentProjectRef();
+        let html = `<table class="db-table"><tr><th>Date</th><th>Tender ID</th><th>Info / APP</th><th>Approved Date</th><th>Winner / Bidder</th><th>Value</th><th>Action</th></tr>`;
+        p.tenders.forEach(r => html += `<tr><td>${r.date}</td><td><code>${r.tenderId}</code></td><td>${r.appInfo} ${buildGDriveHtmlBadges(r.attachments)}</td><td>${r.appDate || 'N/A'}</td><td><strong>${r.bidder || 'N/A'}</strong></td><td>${Number(r.value).toLocaleString()}</td><td><button class="btn btn-sm btn-danger" onclick="removeSubRow('tenders','${r.id}','view-wizard-p5')">&times;</button></td></tr>`);
+        html += `</table>`;
+        const container = document.getElementById('p5-running-table-container');
+        if(container) container.innerHTML = p.tenders.length === 0 ? "" : html;
+    }
+
+    function renderSubTablesPage6() {
+        const p = getCurrentProjectRef();
+        let html = `<table class="db-table"><tr><th>Date</th><th>Component</th><th>Progress Achievements</th><th>% Complete</th><th>Remarks</th><th>Action</th></tr>`;
+        p.executions.forEach(r => html += `<tr><td>${r.date}</td><td><strong>${r.component}</strong></td><td>${r.progress} ${buildGDriveHtmlBadges(r.attachments)}</td><td><strong>${r.percent}%</strong></td><td><i>${r.remarks || 'None'}</i></td><td><button class="btn btn-sm btn-danger" onclick="removeSubRow('executions','${r.id}','view-wizard-p6')">&times;</button></td></tr>`);
+        html += `</table>`;
+        const container = document.getElementById('p6-running-table-container');
+        if(container) container.innerHTML = p.executions.length === 0 ? "" : html;
+    }
+
+    function removeSubRow(arrayName, rowId, pageViewRefresh) {
+        if(confirm("Erase entry row context?")) {
+            const p = database.find(proj => proj.id === currentWorkingProjId);
+            p[arrayName] = p[arrayName].filter(r => r.id !== rowId);
+            syncMemory();
+            switchView(pageViewRefresh);
+        }
+    }
+
+    function editEntireProjectRoute(id) {
+        currentWorkingProjId = id;
+        isEditingExistingMode = true;
+        const p = database.find(proj => proj.id === id);
+
+        document.getElementById('w-projId').disabled = true;
+        document.getElementById('w-projId').value = p.id;
+        document.getElementById('w-projFy').value = p.fy;
+        document.getElementById('w-projName').value = p.projectName;
+        document.getElementById('w-projDetails').value = p.details || '';
+
+        const listContainer = document.getElementById('p1-links-list');
+        if(listContainer) {
+            listContainer.innerHTML = "";
+            if(p.metaLinks) {
+                p.metaLinks.forEach(l => addNewDriveLinkInputRow('p1-links-list', l.link, l.name));
+            }
         }
 
-        // Reset system to clean default states
-        function resetFormForNewPatient() {
-            document.getElementById('clinicalForm').reset();
-            document.getElementById('editVisitIndex').value = "";
-            document.getElementById('formHeader').innerText = "New Clinical Entry";
-            document.getElementById('saveBtn').innerText = "💾 Save Medical Record";
-            document.getElementById('visitDate').valueAsDate = new Date();
-            document.getElementById('historySection').style.display = 'none';
-            
-            const items = document.querySelectorAll('.patient-item');
-            items.forEach(item => item.classList.remove('active'));
+        switchView('view-wizard-p1');
+    }
+
+    function deleteEntireProject(id) {
+        if(confirm("Completely wipe this structural dataset record from storage?")) {
+            database = database.filter(p => p.id !== id);
+            syncMemory();
+            renderMasterDatabase();
+        }
+    }
+
+    function showFullDetailsPage(id) {
+        const p = database.find(proj => proj.id === id);
+        if(!p) return;
+
+        document.getElementById('details-page-title').innerText = `Full Details Dossier: [${p.id}]`;
+        
+        let htmlContent = `
+            <div style="background: var(--bg-color); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 25px; border-left:5px solid var(--accent);">
+                <p style="margin: 0 0 8px 0; font-size:1.05rem;"><strong>Financial Year (FY):</strong> ${p.fy}</p>
+                <p style="margin: 0 0 8px 0; font-size:1.05rem;"><strong>Project ID:</strong> ${p.id}</p>
+                <p style="margin: 0 0 8px 0; font-size:1.05rem;"><strong>Name of Project:</strong> ${p.projectName}</p>
+                <p style="margin: 0 0 12px 0; font-size:1.05rem;"><strong>Baseline Scope parameters:</strong> ${p.details || 'N/A'}</p>
+                ${p.metaLinks && p.metaLinks.length > 0 ? `<p style="margin:0;"><strong>Master Blueprints Archive:</strong> ${buildGDriveHtmlBadges(p.metaLinks)}</p>` : ''}
+            </div>
+
+            <div class="detail-section-title">1. Datewise Project Execution Plans</div>
+            ${p.plans.length === 0 ? '<p style="color:var(--text-muted); padding-left:15px;">No plan entries recorded.</p>' : `
+                <div class="table-responsive"><table class="db-table">
+                    <thead><tr><th style="width:20%">Date</th><th>Plan Summary Details</th></tr></thead>
+                    <tbody>${p.plans.map(l => `<tr><td><strong>${l.date}</strong></td><td>${l.text} ${buildGDriveHtmlBadges(l.attachments)}</td></tr>`).join('')}</tbody>
+                </table></div>
+            `}
+
+            <div class="detail-section-title">2. Datewise Important Decisions &amp; Executed Sub-tasks</div>
+            ${p.decisions.length === 0 ? '<p style="color:var(--text-muted); padding-left:15px;">No decision logs recorded.</p>' : `
+                <div class="table-responsive"><table class="db-table">
+                    <thead><tr><th style="width:20%">Date</th><th>Important Decisions Reached</th><th>Executed Work Context</th></tr></thead>
+                    <tbody>${p.decisions.map(l => `<tr><td><strong>${l.date}</strong></td><td>${l.decision} ${buildGDriveHtmlBadges(l.attachments)}</td><td>${l.work || 'N/A'}</td></tr>`).join('')}</tbody>
+                </table></div>
+            `}
+
+            <div class="detail-section-title">3. Datewise Engineering Bottlenecks &amp; Solutions Deployment</div>
+            ${p.problems.length === 0 ? '<p style="color:var(--text-muted); padding-left:15px;">No impediment entries recorded.</p>' : `
+                <div class="table-responsive"><table class="db-table">
+                    <thead><tr><th style="width:20%">Date</th><th>Problems / Obstacles Faced</th><th>Solutions Discussed</th><th>Solutions Implemented</th></tr></thead>
+                    <tbody>${p.problems.map(l => `<tr><td><strong>${l.date}</strong></td><td style="color:var(--danger); font-weight:600;">${l.problem} ${buildGDriveHtmlBadges(l.attachments)}</td><td>${l.discussed || 'N/A'}</td><td style="color:var(--success); font-weight:600;">${l.implemented || 'N/A'}</td></tr>`).join('')}</tbody>
+                </table></div>
+            `}
+
+            <div class="detail-section-title">4. Layout Status Matrix &amp; Committee Tracking</div>
+            ${p.layouts.length === 0 ? '<p style="color:var(--text-muted); padding-left:15px;">No engineering design notes recorded.</p>' : `
+                <div class="table-responsive"><table class="db-table">
+                    <thead><tr><th style="width:20%">Date</th><th>Draft Layout Details</th><th>Notes Sent to Layout Committee / Design</th></tr></thead>
+                    <tbody>${p.layouts.map(l => `<tr><td><strong>${l.date}</strong></td><td>${l.draft} ${buildGDriveHtmlBadges(l.attachments)}</td><td>${l.note || 'N/A'}</td></tr>`).join('')}</tbody>
+                </table></div>
+            `}
+
+            <div class="detail-section-title">5. Budget Approval Matrix</div>
+            ${p.budgets.length === 0 ? '<p style="color:var(--text-muted); padding-left:15px;">No budget entries cataloged.</p>' : `
+                <div class="table-responsive"><table class="db-table">
+                    <thead><tr><th style="width:15%">Log Date</th><th style="width:20%">Budget Type</th><th>Datewise Decisions Log</th><th style="width:15%">Receive Date</th><th style="width:15%">Amount</th></tr></thead>
+                    <tbody>${p.budgets.map(l => `<tr><td><strong>${l.date}</strong></td><td><mark style="background:#fef3c7; color:#d97706; font-weight:700; padding:3px 8px; border-radius:4px; font-size:0.8rem;">${l.type || 'N/A'}</mark></td><td>${l.decision} ${buildGDriveHtmlBadges(l.attachments)}</td><td>${l.recDate || 'N/A'}</td><td style="font-weight:700; color:var(--success); text-align:right;">${l.amount ? Number(l.amount).toLocaleString() : '0'}</td></tr>`).join('')}</tbody>
+                </table></div>
+            `}
+
+            <div class="detail-section-title">6. Tender Process Ledger Records</div>
+            ${p.tenders.length === 0 ? '<p style="color:var(--text-muted); padding-left:15px;">No procurement rows detected.</p>' : `
+                <div class="table-responsive"><table class="db-table">
+                    <thead><tr><th style="width:15%">Log Date</th><th style="width:15%">Tender ID</th><th>Datewise Info &amp; APP Scope Details</th><th style="width:15%">Approved Date</th><th>Winning Bidder</th><th style="width:15%">Value</th></tr></thead>
+                    <tbody>${p.tenders.map(l => `<tr><td><strong>${l.date}</strong></td><td><code>${l.tenderId}</code></td><td>${l.appInfo} ${buildGDriveHtmlBadges(l.attachments)}</td><td>${l.appDate || 'N/A'}</td><td><strong>${l.bidder || 'N/A'}</strong></td><td style="font-weight:700; color:var(--warning); text-align:right;">${l.value ? Number(l.value).toLocaleString() : '0'}</td></tr>`).join('')}</tbody>
+                </table></div>
+            `}
+
+            <div class="detail-section-title">7. Physical Work Execution Phase Ledger</div>
+            ${(!p.executions || p.executions.length === 0) ? '<p style="color:var(--text-muted); padding-left:15px;">No field construction milestones logged.</p>' : `
+                <div class="table-responsive"><table class="db-table">
+                    <thead>
+                        <tr style="background:var(--bg-color);">
+                            <th style="width:15%">Log Date</th>
+                            <th style="width:20%">Work Component</th>
+                            <th>Site Progress Status &amp; Accomplishments</th>
+                            <th style="width:15%">% Complete</th>
+                            <th style="width:20%">Engineering Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>${p.executions.map(l => `
+                        <tr>
+                            <td><strong>${l.date}</strong></td>
+                            <td style="color:var(--execution); font-weight:700;">${l.component}</td>
+                            <td>${l.progress} ${buildGDriveHtmlBadges(l.attachments)}</td>
+                            <td><span style="background:#f3e8ff; color:#7c3aed; font-weight:800; padding:4px 10px; border-radius:20px; font-size:0.82rem;">${l.percent}%</span></td>
+                            <td><i>${l.remarks || 'N/A'}</i></td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table></div>
+            `}
+        `;
+
+        document.getElementById('fullDetailsRenderContainer').innerHTML = htmlContent;
+        switchView('view-full-details');
+    }
+
+    function renderMasterDatabase() {
+        const out = document.getElementById('masterDbContainer');
+        if(!out) return;
+        out.innerHTML = "";
+
+        if(database.length === 0) {
+            out.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:20px; font-weight:bold;">No project data rows found.</p>`;
+            return;
         }
 
-        // Live Sidebar Filter Search 
-        function filterPatients() {
-            const filter = document.getElementById('searchPatient').value.toLowerCase();
-            const items = document.querySelectorAll('.patient-item');
-            
-            items.forEach(item => {
-                const text = item.innerText.toLowerCase();
-                item.style.display = text.includes(filter) ? '' : 'none';
+        let grouped = {};
+        database.forEach(p => {
+            if(!grouped[p.fy]) grouped[p.fy] = [];
+            grouped[p.fy].push(p);
+        });
+
+        Object.keys(grouped).sort().reverse().forEach(fy => {
+            let section = document.createElement('div');
+            section.innerHTML = `<div class="year-header">Financial Year: ${fy}</div>`;
+
+            grouped[fy].forEach(p => {
+                let card = document.createElement('div');
+                card.className = 'project-card';
+                card.innerHTML = `
+                    <div class="project-summary">
+                        <div class="project-meta-info">
+                            <strong>FY:</strong> ${p.fy} | 
+                            <strong>ID:</strong> <code>${p.id}</code> | 
+                            <strong>Name:</strong> <span style="font-weight:700; color:var(--text-main); margin-left:4px;">${p.projectName}</span>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-success" onclick="showFullDetailsPage('${p.id}')">See Full Details</button>
+                            <button class="btn btn-sm" onclick="editEntireProjectRoute('${p.id}')">Edit / Add Logs</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteEntireProject('${p.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+                section.appendChild(card);
             });
-        }
-    </script>
+            out.appendChild(section);
+        });
+    }
+
+    // --- REWRITTEN BULLETPROOF EXPORT MAPPING LOGIC MATRIX ---
+    function exportDataToCSV() {
+        if(database.length === 0) return alert("No data to export.");
+        let csvRows = [];
+        // Fixed alignment tokens
+        csvRows.push("RecordType,ProjectID,FY,ProjectName,Details,Date,Field1,Field2,Field3,Field4,Field5,Field6");
+
+        database.forEach(p => {
+            // Corrected p.name tracking error wrapper key path context
+            csvRows.push(`METADATA,"${p.id}","${p.fy}","${(p.projectName || '').replace(/"/g, '""')}","${(p.details || '').replace(/"/g, '""')}",,,,,,,`);
+            if(p.metaLinks) p.metaLinks.forEach(l => csvRows.push(`GDRIVE_META,"${p.id}",,,,"${l.name}","${l.link}",,,,,`));
+            if(p.plans) p.plans.forEach(l => csvRows.push(`PLAN,"${p.id}",,,,"${l.date}","${l.text.replace(/"/g, '""')}",,,,,`));
+            if(p.decisions) p.decisions.forEach(l => csvRows.push(`DECISION,"${p.id}",,,,"${l.date}","${l.decision.replace(/"/g, '""')}","${l.work.replace(/"/g, '""')}",,,,`));
+            if(p.problems) p.problems.forEach(l => csvRows.push(`PROBLEM,"${p.id}",,,,"${l.date}","${l.problem.replace(/"/g, '""')}","${l.discussed.replace(/"/g, '""')}","${l.implemented.replace(/"/g, '""')}",,,`));
+            if(p.layouts) p.layouts.forEach(l => csvRows.push(`LAYOUT,"${p.id}",,,,"${l.date}","${l.draft.replace(/"/g, '""')}","${l.note.replace(/"/g, '""')}",,,,`));
+            if(p.budgets) p.budgets.forEach(l => csvRows.push(`BUDGET,"${p.id}",,,,"${l.date}","${l.type}","${l.decision.replace(/"/g, '""')}","${l.recDate}","${l.amount}",,`));
+            if(p.tenders) p.tenders.forEach(l => csvRows.push(`TENDER,"${p.id}",,,,"${l.date}","${l.tenderId}","${l.appInfo.replace(/"/g, '""')}","${l.appDate}","${(l.bidder || '').replace(/"/g, '""')}","${l.value}"`));
+            if(p.executions) p.executions.forEach(l => csvRows.push(`EXECUTION,"${p.id}",,,,"${l.date}","${l.component.replace(/"/g, '""')}","${l.progress.replace(/"/g, '""')}","${l.percent}","${l.remarks.replace(/"/g, '""')}",`));
+        });
+
+        // Safe browser data string assembly down-streams
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csvRows.join("\n"));
+        const link = document.createElement("a");
+        link.setAttribute("href", csvContent);
+        link.setAttribute("download", `Project_Diary_Master_Export_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function clearPageFormFields() {
+        document.querySelectorAll('.app-view input, .app-view textarea').forEach(el => {
+            if(el.id && !el.id.startsWith('w-proj') && !el.classList.contains('gdrive-label-field') && !el.classList.contains('gdrive-url-field')) {
+                el.value = "";
+            }
+        });
+    }
+
+    function syncMemory() {
+        localStorage.setItem('wizard_diary_data_v4_execution', JSON.stringify(database));
+    }
+</script>
 </body>
 </html>
